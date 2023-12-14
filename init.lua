@@ -136,9 +136,9 @@ require('lazy').setup({
         end
 
         -- Navigation
-        map({ 'n', 'v' }, ']c', function()
+        map({ 'n', 'v' }, ']h', function()
           if vim.wo.diff then
-            return ']c'
+            return ']h'
           end
           vim.schedule(function()
             gs.next_hunk()
@@ -146,9 +146,9 @@ require('lazy').setup({
           return '<Ignore>'
         end, { expr = true, desc = 'Jump to next hunk' })
 
-        map({ 'n', 'v' }, '[c', function()
+        map({ 'n', 'v' }, '[h', function()
           if vim.wo.diff then
-            return '[c'
+            return '[h'
           end
           vim.schedule(function()
             gs.prev_hunk()
