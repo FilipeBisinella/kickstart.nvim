@@ -637,6 +637,37 @@ mason_lspconfig.setup_handlers {
     }
   end,
 }
+function MasonLspPackages()
+  local registry = require("mason-registry")
+  return registry.get_installed_package_names()
+end
+
+function RequestedLspPackages()
+  local wanted = {}
+  for _, want in ipairs(vim.tbl_keys(servers)) do
+    local name = mason_lspconfig.get_mappings().lspconfig_to_mason[want]
+    table.insert(wanted, name)
+  end
+  return wanted
+end
+
+function MasonNeedsClear()
+  local wanted = {}
+  for _, want in ipairs(RequestedLspPackages()) do
+    wanted[want] = true
+  end
+  local to_clear = {}
+  for _, installed in ipairs(MasonLspPackages()) do
+    if not wanted[installed] then
+      table.insert(to_clear, installed)
+    end
+  end
+  return to_clear
+end
+
+for _, c in ipairs(MasonNeedsClear()) do
+  print("Possibly not wanted package", c)
+end
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
