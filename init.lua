@@ -595,10 +595,11 @@ require('mason-lspconfig').setup()
 local servers = {
   -- clangd = {},
   -- gopls = {},
-  pyright = {},
+  -- pyright = {},
+  ruff_lsp = {},
   -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
   rust_analyzer = {
-    ["rust-analyzer"] = { completion = { autoimport = { enable = false } }, checkOnSave = { command = "clippy" } },
+    ["rust-analyzer"] = { --[[  completion = { autoimport = { enable = false } }, ]] checkOnSave = { command = "clippy" } },
   },
   -- tsserver = {},
   -- html = { filetypes = { 'html', 'twig', 'hbs'} },
