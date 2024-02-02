@@ -60,6 +60,15 @@ return {
               return
             end
 
+            -- ruff does not yet have organizeImports on format
+            -- https://github.com/astral-sh/ruff-lsp/issues/335
+            if client.name == 'ruff_lsp' then
+              vim.lsp.buf.code_action({
+                context = { only = { "source.organizeImports.ruff" } },
+                apply = true,
+              })
+              vim.wait(100)
+            end
             vim.lsp.buf.format {
               async = false,
               filter = function(c)
