@@ -338,9 +338,6 @@ vim.o.termguicolors = true
 -- See `:help vim.keymap.set()`
 vim.keymap.set({ 'n', 'v' }, '<Space>', '<Nop>', { silent = true })
 
--- Replace while keeping current yank
-vim.keymap.set('n', "<leader>p", "\"_dP", { noremap = true, silent = true, desc = "Paste no yank" })
-
 -- Remap for dealing with word wrap
 vim.keymap.set('n', 'k', "v:count == 0 ? 'gk' : 'k'", { expr = true, silent = true })
 vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = true })
@@ -348,6 +345,13 @@ vim.keymap.set('n', 'j', "v:count == 0 ? 'gj' : 'j'", { expr = true, silent = tr
 -- Move visual block
 vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
 vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+-- https://vimtricks.com/p/vimtrick-moving-lines/
+-- nnoremap <c-j> :m .+1<CR>==
+-- nnoremap <c-k> :m .-2<CR>==
+-- inoremap <c-j> <Esc>:m .+1<CR>==gi
+-- inoremap <c-k> <Esc>:m .-2<CR>==gi
+-- vnoremap <c-j> :m '>+1<CR>gv=gv
+-- vnoremap <c-k> :m '<-2<CR>gv=gv
 
 -- Diagnostic keymaps
 -- TODO use trouble
@@ -369,6 +373,12 @@ vim.keymap.set("n", "J", "mzJ`z")
 
 -- TODO see nnoremap * :let @/='\V' . substitute(escape(expand('<cword>'), '\'),'\n','\\n','g') . '\ze'<CR>
 -- for no jump serach (close to <C-d> in vscode
+-- Note that the ":vmap" command can be used to specifically map keys in Visual
+-- mode.  For example, if you would like the "/" command not to extend the Visual
+-- area, but instead take the highlighted text and search for that:
+-- :vmap / y/<C-R>"<CR>
+-- vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
+-- https://stackoverflow.com/questions/676600/vim-search-and-replace-selected-text
 
 -- [[ Highlight on yank ]]
 -- See `:help vim.highlight.on_yank()`
