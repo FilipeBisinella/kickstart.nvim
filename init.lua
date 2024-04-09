@@ -168,8 +168,8 @@ vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Move visual block
-vim.keymap.set("v", "J", ":m '>+1<CR>gv=gv")
-vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
 -- https://vimtricks.com/p/vimtrick-moving-lines/
 -- nnoremap <c-j> :m .+1<CR>==
 -- nnoremap <c-k> :m .-2<CR>==
@@ -182,10 +182,12 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- TODO use trouble
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-vim.keymap.set('n', '[e', function() vim.diagnostic.goto_prev({ severity = vim.diagnostic.severity.ERROR }) end,
-  { desc = 'Go to previous [E]rror message' })
-vim.keymap.set('n', ']e', function() vim.diagnostic.goto_next({ severity = vim.diagnostic.severity.ERROR }) end,
-  { desc = 'Go to next [E]rror message' })
+vim.keymap.set('n', '[e', function()
+  vim.diagnostic.goto_prev { severity = vim.diagnostic.severity.ERROR }
+end, { desc = 'Go to previous [E]rror message' })
+vim.keymap.set('n', ']e', function()
+  vim.diagnostic.goto_next { severity = vim.diagnostic.severity.ERROR }
+end, { desc = 'Go to next [E]rror message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -208,7 +210,7 @@ vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
 -- vim.keymap.set("n", "<C-u>", "<C-u>zz")
 
 -- Join lines without losing curosr position
-vim.keymap.set("n", "J", "mzJ`z")
+vim.keymap.set('n', 'J', 'mzJ`z')
 
 -- TODO see nnoremap * :let @/='\V' . substitute(escape(expand('<cword>'), '\'),'\n','\\n','g') . '\ze'<CR>
 -- for no jump serach (close to <C-d> in vscode
@@ -294,84 +296,73 @@ require('lazy').setup({
         changedelete = { text = '~' },
       },
     },
-      -- TODO
-    --   on_attach = function(bufnr)
-    --     local gs = package.loaded.gitsigns
+    on_attach = function(bufnr)
+      local gitsigns = require 'gitsigns'
 
-    --     local function map(mode, l, r, opts)
-    --       opts = opts or {}
-    --       opts.buffer = bufnr
-    --       vim.keymap.set(mode, l, r, opts)
-    --     end
+      local function map(mode, l, r, opts)
+        opts = opts or {}
+        opts.buffer = bufnr
+        vim.keymap.set(mode, l, r, opts)
+      end
 
-    --     -- Navigation
-    --     map({ 'n', 'v' }, ']h', function()
-    --       if vim.wo.diff then
-    --         return ']h'
-    --       end
-    --       vim.schedule(function()
-    --         gs.next_hunk()
-    --       end)
-    --       return '<Ignore>'
-    --     end, { expr = true, desc = 'Jump to next hunk' })
+      -- Navigation
+      map('n', ']h', function()
+        if vim.wo.diff then
+          vim.cmd.normal { ']h', bang = true }
+        else
+          gitsigns.nav_hunk 'next'
+        end
+      end)
 
-    --     map({ 'n', 'v' }, '[h', function()
-    --       if vim.wo.diff then
-    --         return '[h'
-    --       end
-    --       vim.schedule(function()
-    --         gs.prev_hunk()
-    --       end)
-    --       return '<Ignore>'
-    --     end, { expr = true, desc = 'Jump to previous hunk' })
+      map('n', '[h', function()
+        if vim.wo.diff then
+          vim.cmd.normal { '[h', bang = true }
+        else
+          gitsigns.nav_hunk 'prev'
+        end
+      end)
 
-    --     -- Actions
-    --     -- visual mode
-    --     map('v', '<leader>hs', function()
-    --       gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-    --     end, { desc = 'stage git hunk' })
-    --     map('v', '<leader>hr', function()
-    --       gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-    --     end, { desc = 'reset git hunk' })
-    --     -- normal mode
-    --     map('n', '<leader>hs', gs.stage_hunk, { desc = 'git stage hunk' })
-    --     map('n', '<leader>hr', gs.reset_hunk, { desc = 'git reset hunk' })
-    --     map('n', '<leader>hS', gs.stage_buffer, { desc = 'git Stage buffer' })
-    --     map('n', '<leader>hu', gs.undo_stage_hunk, { desc = 'undo stage hunk' })
-    --     map('n', '<leader>hR', gs.reset_buffer, { desc = 'git Reset buffer' })
-    --     map('n', '<leader>hp', gs.preview_hunk, { desc = 'preview git hunk' })
-    --     map('n', '<leader>hb', function()
-    --       gs.blame_line { full = false }
-    --     end, { desc = 'git blame line' })
-    --     map('n', '<leader>hd', gs.diffthis, { desc = 'git diff against index' })
-    --     map('n', '<leader>hD', function()
-    --       gs.diffthis '~'
-    --     end, { desc = 'git diff against last commit' })
+      -- Actions
+      map('n', '<leader>hs', gitsigns.stage_hunk)
+      map('n', '<leader>hr', gitsigns.reset_hunk)
+      map('v', '<leader>hs', function()
+        gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
+      end)
+      map('v', '<leader>hr', function()
+        gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
+      end)
+      map('n', '<leader>hS', gitsigns.stage_buffer)
+      map('n', '<leader>hu', gitsigns.undo_stage_hunk)
+      map('n', '<leader>hR', gitsigns.reset_buffer)
+      map('n', '<leader>hp', gitsigns.preview_hunk)
+      map('n', '<leader>hb', function()
+        gitsigns.blame_line { full = true }
+      end)
+      map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
+      map('n', '<leader>hd', gitsigns.diffthis)
+      map('n', '<leader>hD', function()
+        gitsigns.diffthis '~'
+      end)
+      map('n', '<leader>td', gitsigns.toggle_deleted)
 
-    --     -- Toggles
-    --     map('n', '<leader>tb', gs.toggle_current_line_blame, { desc = 'toggle git blame line' })
-    --     map('n', '<leader>td', gs.toggle_deleted, { desc = 'toggle git show deleted' })
-
-    --     -- Text object
-    --     map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>', { desc = 'select git hunk' })
-    --   end,
-    -- },
+      -- Text object
+      map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+    end,
   },
-
 
   {
     'petertriho/nvim-scrollbar',
     opts = {
       handle = {
         blend = 50,
-        color = "white",
+        color = 'white',
       },
       marks = {
         Cursor = {
-          text = " ",
-        }
-      }
-    }
+          text = ' ',
+        },
+      },
+    },
   },
 
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
@@ -404,19 +395,18 @@ require('lazy').setup({
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
         -- TODO
         -- ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
-        -- ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
+        ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
         -- ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
         -- ['<leader>x'] = { name = '[X] Trouble', _ = 'which_key_ignore' },
       }
+      -- register which-key VISUAL mode
+      -- required for visual <leader>hs (hunk stage) to work
+      require('which-key').register({
+        ['<leader>'] = { name = 'VISUAL <leader>' },
+        ['<leader>h'] = { 'Git [H]unk' },
+      }, { mode = 'v' })
     end,
   },
-
-  -- register which-key VISUAL mode
-  -- required for visual <leader>hs (hunk stage) to work
-  -- require('which-key').register({
-  --   ['<leader>'] = { name = 'VISUAL <leader>' },
-  --   ['<leader>h'] = { 'Git [H]unk' },
-  -- }, { mode = 'v' })
 
   -- NOTE: Plugins can specify dependencies.
   --
@@ -581,9 +571,9 @@ require('lazy').setup({
         callback = function(event)
           -- NOTE: Remember that Lua is a real programming language, and as such it is possible
           -- to define small helper and utility functions so you don't have to repeat yourself.
-  --
-  -- In this case, we create a function that lets us more easily define mappings specific
-  -- for LSP related items. It sets the mode, buffer and description for us each time.
+          --
+          -- In this case, we create a function that lets us more easily define mappings specific
+          -- for LSP related items. It sets the mode, buffer and description for us each time.
           local map = function(keys, func, desc)
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
@@ -628,7 +618,7 @@ require('lazy').setup({
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
-  
+
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
@@ -656,42 +646,44 @@ require('lazy').setup({
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
 
--- Enable the following language servers
---  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
---
---  Add any additional override configuration in the following tables. Available keys are:
---  - cmd (table): Override the default command used to start the server
---  - filetypes (table): Override the default list of associated filetypes for the server
---  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
---  - settings (table): Override the default settings passed when initializing the server.
---        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
-local servers = {
-  -- clangd = {},
-  -- gopls = {},
-  pyright = {},
-  ruff_lsp = {},
-  -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
-  rust_analyzer = {
-    ["rust-analyzer"] = { --[[  completion = { autoimport = { enable = false } }, ]] checkOnSave = { command = "clippy" } },
-  },
-  -- tsserver = {},
-  -- html = { filetypes = { 'html', 'twig', 'hbs'} },
-
-  lua_ls = {
-    -- cmd = {...},
-    -- filetypes = { ...},
-    -- capabilities = {},
-    settings = {
-      Lua = {
-        completion = {
-          callSnippet = 'Replace',
+      -- Enable the following language servers
+      --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
+      --
+      --  Add any additional override configuration in the following tables. Available keys are:
+      --  - cmd (table): Override the default command used to start the server
+      --  - filetypes (table): Override the default list of associated filetypes for the server
+      --  - capabilities (table): Override fields in capabilities. Can be used to disable certain LSP features.
+      --  - settings (table): Override the default settings passed when initializing the server.
+      --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
+      local servers = {
+        -- clangd = {},
+        -- gopls = {},
+        pyright = {},
+        ruff_lsp = {},
+        -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
+        rust_analyzer = {
+          ['rust-analyzer'] = { --[[  completion = { autoimport = { enable = false } }, ]]
+            checkOnSave = { command = 'clippy' },
+          },
         },
-        -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-        -- diagnostics = { disable = { 'missing-fields' } },
-      },
-    },
-  },
-}
+        -- tsserver = {},
+        -- html = { filetypes = { 'html', 'twig', 'hbs'} },
+
+        lua_ls = {
+          -- cmd = {...},
+          -- filetypes = { ...},
+          -- capabilities = {},
+          settings = {
+            Lua = {
+              completion = {
+                callSnippet = 'Replace',
+              },
+              -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
+              -- diagnostics = { disable = { 'missing-fields' } },
+            },
+          },
+        },
+      }
 
       -- Ensure the servers and tools above are installed
       --  To check the current status of installed tools and/or manually install
@@ -736,8 +728,8 @@ local servers = {
         return {
           timeout_ms = 500,
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
-    }
-  end,
+        }
+      end,
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
@@ -854,16 +846,16 @@ local servers = {
       }
     end,
   },
-  
+
   { -- You can easily change to a different colorscheme.
-  -- Change the name of the colorscheme plugin below, and then
-  -- change the command in the config to whatever the name of that colorscheme is.
-  --
-  -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-  'navarasu/onedark.nvim',
+    -- Change the name of the colorscheme plugin below, and then
+    -- change the command in the config to whatever the name of that colorscheme is.
+    --
+    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+    'navarasu/onedark.nvim',
     priority = 1000,
     config = function()
-      require('onedark').setup({ style = 'warmer' })
+      require('onedark').setup { style = 'warmer' }
       vim.cmd.colorscheme 'onedark'
     end,
   },
@@ -908,65 +900,7 @@ local servers = {
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
   },
--- -- [[ Configure Treesitter ]]
--- -- See `:help nvim-treesitter`
--- -- Defer Treesitter setup after first render to improve startup time of 'nvim {filename}'
--- vim.defer_fn(function()
---   require('nvim-treesitter.configs').setup {
---     -- Add languages to be installed here that you want installed for treesitter
---     ensure_installed = { 'c', 'cpp', 'go', 'lua', 'python', 'rust', 'tsx', 'javascript', 'typescript', 'vimdoc', 'vim', 'bash' },
 
---     -- Autoinstall languages that are not installed. Defaults to false (but you can change for yourself!)
---     auto_install = false,
-
---     highlight = { enable = true },
---     indent = { enable = true },
---     textobjects = {
---       select = {
---         enable = true,
---         lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
---         keymaps = {
---           -- You can use the capture groups defined in textobjects.scm
---           ['aa'] = '@parameter.outer',
---           ['ia'] = '@parameter.inner',
---           ['af'] = '@function.outer',
---           ['if'] = '@function.inner',
---           ['ac'] = '@class.outer',
---           ['ic'] = '@class.inner',
---         },
---       },
---       move = {
---         enable = true,
---         set_jumps = true, -- whether to set jumps in the jumplist
---         goto_next_start = {
---           [']f'] = '@function.outer',
---           [']['] = '@class.outer',
---         },
---         goto_next_end = {
---           [']F'] = '@function.outer',
---           [']]'] = '@class.outer',
---         },
---         goto_previous_start = {
---           ['[f'] = '@function.outer',
---           ['[['] = '@class.outer',
---         },
---         goto_previous_end = {
---           ['[F'] = '@function.outer',
---           ['[]'] = '@class.outer',
---         },
---       },
---       swap = {
---         enable = true,
---         swap_next = {
---           ['<leader>a'] = '@parameter.inner',
---         },
---         swap_previous = {
---           ['<leader>A'] = '@parameter.inner',
---         },
---       },
---     },
---   }
--- end, 0)
   { -- Highlight, edit, and navigate code
     'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
@@ -1016,7 +950,7 @@ local servers = {
   --
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
-  -- { import = 'custom.plugins' },
+  { import = 'custom.plugins.markdown-preview' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
