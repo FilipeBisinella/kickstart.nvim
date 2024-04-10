@@ -721,26 +721,32 @@ require('lazy').setup({
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
+      formatters = {
+        ruff_imports = {
+          command = 'ruff',
+          args = {
+            'check',
+            '--force-exclude',
+            '--stdin-filename',
+            '$FILENAME',
+            '--select',
+            'I',
+            '--fix',
+            '-',
+          },
+          stdin = true,
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'ruff_format', 'ruff_imports' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         -- javascript = { { "prettierd", "prettier" } },
       },
     },
-    -- TODO
-    -- ruff does not yet have organizeImports on format
-    -- https://github.com/astral-sh/ruff-lsp/issues/335
-    -- if client.name == 'ruff_lsp' then
-    --   vim.lsp.buf.code_action({
-    --     context = { only = { "source.organizeImports.ruff" } },
-    --     apply = true,
-    --   })
-    --   vim.wait(100)
-    -- end
   },
 
   { -- Autocompletion
