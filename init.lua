@@ -302,27 +302,27 @@ require('lazy').setup({
         end)
 
         -- Actions
-        map('n', '<leader>hs', gitsigns.stage_hunk)
-        map('n', '<leader>hr', gitsigns.reset_hunk)
+        map('n', '<leader>hs', gitsigns.stage_hunk, { desc = '[S]tage hunk' })
+        map('n', '<leader>hr', gitsigns.reset_hunk, { desc = '[R]eset hunk' })
         map('v', '<leader>hs', function()
           gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end)
+        end, { desc = '[S]tage hunk' })
         map('v', '<leader>hr', function()
           gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end)
-        map('n', '<leader>hS', gitsigns.stage_buffer)
-        map('n', '<leader>hu', gitsigns.undo_stage_hunk)
-        map('n', '<leader>hR', gitsigns.reset_buffer)
-        map('n', '<leader>hp', gitsigns.preview_hunk)
+        end, { desc = '[R]eset hunk' })
+        map('n', '<leader>hS', gitsigns.stage_buffer, { desc = '[S]tage buffer' })
+        map('n', '<leader>hu', gitsigns.undo_stage_hunk, { desc = '[U]ndo stage hunk' })
+        map('n', '<leader>hR', gitsigns.reset_buffer, { desc = '[R]eset buffer' })
+        map('n', '<leader>hp', gitsigns.preview_hunk, { desc = '[P]review hunk' })
         map('n', '<leader>hb', function()
           gitsigns.blame_line { full = true }
-        end)
-        map('n', '<leader>tb', gitsigns.toggle_current_line_blame)
-        map('n', '<leader>hd', gitsigns.diffthis)
+        end, { desc = '[B]lame line' })
+        map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle line blame' })
+        map('n', '<leader>hd', gitsigns.diffthis, { desc = '[D]iff this' })
         map('n', '<leader>hD', function()
           gitsigns.diffthis '~'
-        end)
-        map('n', '<leader>td', gitsigns.toggle_deleted)
+        end, { desc = '[D]iff this' })
+        map('n', '<leader>td', gitsigns.toggle_deleted, { desc = '[T]oggle deleted' })
 
         -- Text object
         map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
@@ -377,7 +377,7 @@ require('lazy').setup({
         -- ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
         ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
         -- ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
-        -- ['<leader>x'] = { name = '[X] Trouble', _ = 'which_key_ignore' },
+        ['<leader>x'] = { name = '[X] Trouble', _ = 'which_key_ignore' },
       }
       -- register which-key VISUAL mode
       -- required for visual <leader>hs (hunk stage) to work
@@ -958,6 +958,7 @@ require('lazy').setup({
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   { import = 'custom.plugins.markdown-preview' },
+  { import = 'custom.plugins.trouble' },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
