@@ -70,7 +70,7 @@ P.S. You can delete this when you're done too. It's your config now! :)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Set to true if you have a Nerd Font installed
+-- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
 -- [[ Setting options ]]
@@ -275,58 +275,6 @@ require('lazy').setup({
         topdelete = { text = '‾' },
         changedelete = { text = '~' },
       },
-      on_attach = function(bufnr)
-        local gitsigns = require 'gitsigns'
-
-        local function map(mode, l, r, opts)
-          opts = opts or {}
-          opts.buffer = bufnr
-          vim.keymap.set(mode, l, r, opts)
-        end
-
-        -- Navigation
-        map('n', ']h', function()
-          if vim.wo.diff then
-            vim.cmd.normal { ']h', bang = true }
-          else
-            gitsigns.nav_hunk 'next'
-          end
-        end)
-
-        map('n', '[h', function()
-          if vim.wo.diff then
-            vim.cmd.normal { '[h', bang = true }
-          else
-            gitsigns.nav_hunk 'prev'
-          end
-        end)
-
-        -- Actions
-        map('n', '<leader>hs', gitsigns.stage_hunk, { desc = '[S]tage hunk' })
-        map('n', '<leader>hr', gitsigns.reset_hunk, { desc = '[R]eset hunk' })
-        map('v', '<leader>hs', function()
-          gitsigns.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = '[S]tage hunk' })
-        map('v', '<leader>hr', function()
-          gitsigns.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = '[R]eset hunk' })
-        map('n', '<leader>hS', gitsigns.stage_buffer, { desc = '[S]tage buffer' })
-        map('n', '<leader>hu', gitsigns.undo_stage_hunk, { desc = '[U]ndo stage hunk' })
-        map('n', '<leader>hR', gitsigns.reset_buffer, { desc = '[R]eset buffer' })
-        map('n', '<leader>hp', gitsigns.preview_hunk, { desc = '[P]review hunk' })
-        map('n', '<leader>hb', function()
-          gitsigns.blame_line { full = true }
-        end, { desc = '[B]lame line' })
-        map('n', '<leader>tb', gitsigns.toggle_current_line_blame, { desc = '[T]oggle line blame' })
-        map('n', '<leader>hd', gitsigns.diffthis, { desc = '[D]iff this' })
-        map('n', '<leader>hD', function()
-          gitsigns.diffthis '~'
-        end, { desc = '[D]iff this' })
-        map('n', '<leader>td', gitsigns.toggle_deleted, { desc = '[T]oggle deleted' })
-
-        -- Text object
-        map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
-      end,
     },
   },
 
@@ -376,13 +324,11 @@ require('lazy').setup({
         -- TODO
         -- ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
         ['<leader>h'] = { name = 'Git [H]unk', _ = 'which_key_ignore' },
-        -- ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
+        ['<leader>t'] = { name = '[T]oggle', _ = 'which_key_ignore' },
         ['<leader>x'] = { name = '[X] Trouble', _ = 'which_key_ignore' },
       }
-      -- register which-key VISUAL mode
-      -- required for visual <leader>hs (hunk stage) to work
+      -- visual mode
       require('which-key').register({
-        ['<leader>'] = { name = 'VISUAL <leader>' },
         ['<leader>h'] = { 'Git [H]unk' },
       }, { mode = 'v' })
     end,
@@ -513,7 +459,7 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      'williamboman/mason.nvim',
+      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -615,16 +561,37 @@ require('lazy').setup({
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.server_capabilities.documentHighlightProvider then
+            local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
               buffer = event.buf,
+              group = highlight_augroup,
               callback = vim.lsp.buf.document_highlight,
             })
 
             vim.api.nvim_create_autocmd({ 'CursorMoved', 'CursorMovedI' }, {
               buffer = event.buf,
+              group = highlight_augroup,
               callback = vim.lsp.buf.clear_references,
             })
           end
+
+          -- The following autocommand is used to enable inlay hints in your
+          -- code, if the language server you are using supports them
+          --
+          -- This may be unwanted, since they displace some of your code
+          if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
+            map('<leader>th', function()
+              vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+            end, '[T]oggle Inlay [H]ints')
+          end
+        end,
+      })
+
+      vim.api.nvim_create_autocmd('LspDetach', {
+        group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
+        callback = function(event)
+          vim.lsp.buf.clear_references()
+          vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event.buf }
         end,
       })
 
@@ -836,6 +803,12 @@ require('lazy').setup({
           --  This will expand snippets if the LSP sent a snippet.
           ['<C-y>'] = cmp.mapping.confirm { select = true },
 
+          -- If you prefer more traditional completion keymaps,
+          -- you can uncomment the following lines
+          --['<CR>'] = cmp.mapping.confirm { select = true },
+          --['<Tab>'] = cmp.mapping.select_next_item(),
+          --['<S-Tab>'] = cmp.mapping.select_prev_item(),
+
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
           --  completions whenever it has completion options available.
@@ -945,6 +918,8 @@ require('lazy').setup({
     config = function(_, opts)
       -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
 
+      -- Prefer git instead of curl in order to improve connectivity in some environments
+      require('nvim-treesitter.install').prefer_git = true
       ---@diagnostic disable-next-line: missing-fields
       require('nvim-treesitter.configs').setup(opts)
 
@@ -969,6 +944,9 @@ require('lazy').setup({
   -- require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
   -- require 'kickstart.plugins.lint',
+  -- require 'kickstart.plugins.autopairs',
+  -- require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
