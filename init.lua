@@ -647,7 +647,15 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {},
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                diagnosticMode = 'workspace',
+              },
+            },
+          },
+        },
         ruff_lsp = {},
         -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
         rust_analyzer = {
