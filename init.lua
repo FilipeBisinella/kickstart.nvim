@@ -671,9 +671,29 @@ require('lazy').setup({
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
+        pyright = {
+          settings = {
+            pyright = { -- Using Ruff's import organizer
+              disableOrganizeImports = true,
+            },
+            python = {
+              analysis = {
+                diagnosticMode = 'workspace',
+                -- Ignore all files for analysis to exclusively use Ruff for linting
+                -- ignore = { '*' },
+              },
+            },
+          },
+        },
+        ruff = {},
+        -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
+        rust_analyzer = {
+          settings = {
+            ['rust-analyzer'] = { --[[  completion = { autoimport = { enable = false } }, ]]
+              check = { command = 'clippy' },
+            },
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -717,6 +737,9 @@ require('lazy').setup({
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+
+      -- remove mason installed packages that are not listed in ensure_installed
+      require('mason-tool-installer').clean()
 
       require('mason-lspconfig').setup {
         handlers = {
