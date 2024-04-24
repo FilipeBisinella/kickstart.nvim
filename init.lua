@@ -278,6 +278,21 @@ require('lazy').setup({
     },
   },
 
+  {
+    'petertriho/nvim-scrollbar',
+    opts = {
+      handle = {
+        blend = 50,
+        color = 'white',
+      },
+      marks = {
+        Cursor = {
+          text = ' ',
+        },
+      },
+    },
+  },
+
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
