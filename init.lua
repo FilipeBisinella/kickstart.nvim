@@ -617,16 +617,24 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
-        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-        --
-        -- Some languages (like typescript) have entire language plugins that can be useful:
-        --    https://github.com/pmizio/typescript-tools.nvim
-        --
-        -- But for many setups, the LSP (`tsserver`) will work just fine
+        pyright = {
+          settings = {
+            python = {
+              analysis = {
+                diagnosticMode = 'workspace',
+              },
+            },
+          },
+        },
+        ruff_lsp = {},
+        -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
+        rust_analyzer = {
+          ['rust-analyzer'] = { --[[  completion = { autoimport = { enable = false } }, ]]
+            checkOnSave = { command = 'clippy' },
+          },
+        },
         -- tsserver = {},
-        --
+        -- html = { filetypes = { 'html', 'twig', 'hbs'} },
 
         lua_ls = {
           -- cmd = {...},
