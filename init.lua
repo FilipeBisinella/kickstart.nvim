@@ -82,7 +82,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -134,6 +134,12 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- Set completeopt to have a better completion experience
+vim.o.completeopt = 'menuone,noselect'
+
+-- NOTE: You should make sure your terminal supports this
+vim.o.termguicolors = true
+
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 
@@ -141,9 +147,27 @@ vim.opt.scrolloff = 10
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
+-- Move visual block
+vim.keymap.set('v', 'J', ":m '>+1<CR>gv=gv")
+vim.keymap.set('v', 'K', ":m '<-2<CR>gv=gv")
+-- https://vimtricks.com/p/vimtrick-moving-lines/
+-- nnoremap <c-j> :m .+1<CR>==
+-- nnoremap <c-k> :m .-2<CR>==
+-- inoremap <c-j> <Esc>:m .+1<CR>==gi
+-- inoremap <c-k> <Esc>:m .-2<CR>==gi
+-- vnoremap <c-j> :m '>+1<CR>gv=gv
+-- vnoremap <c-k> :m '<-2<CR>gv=gv
+
 -- Diagnostic keymaps
+-- TODO use trouble
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+vim.keymap.set('n', '[e', function()
+  vim.diagnostic.goto_prev { severity = vim.diagnostic.severity.ERROR }
+end, { desc = 'Go to previous [E]rror message' })
+vim.keymap.set('n', ']e', function()
+  vim.diagnostic.goto_next { severity = vim.diagnostic.severity.ERROR }
+end, { desc = 'Go to next [E]rror message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -156,10 +180,26 @@ vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagn
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
 -- TIP: Disable arrow keys in normal mode
--- vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
--- vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
--- vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
--- vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+
+-- Navigation keymaps
+-- vim.keymap.set("n", "<C-d>", "<C-d>zz")
+-- vim.keymap.set("n", "<C-u>", "<C-u>zz")
+
+-- Join lines without losing curosr position
+vim.keymap.set('n', 'J', 'mzJ`z')
+
+-- TODO see nnoremap * :let @/='\V' . substitute(escape(expand('<cword>'), '\'),'\n','\\n','g') . '\ze'<CR>
+-- for no jump serach (close to <C-d> in vscode
+-- Note that the ":vmap" command can be used to specifically map keys in Visual
+-- mode.  For example, if you would like the "/" command not to extend the Visual
+-- area, but instead take the highlighted text and search for that:
+-- :vmap / y/<C-R>"<CR>
+-- vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
+-- https://stackoverflow.com/questions/676600/vim-search-and-replace-selected-text
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
