@@ -380,6 +380,19 @@ do
     },
   }
 
+  vim.pack.add { gh 'petertriho/nvim-scrollbar' }
+  require('scrollbar').setup {
+    handle = {
+      blend = 50,
+      color = 'white',
+    },
+    marks = {
+      Cursor = {
+        text = ' ',
+      },
+    },
+  }
+
   -- Useful plugin to show you pending keybinds.
   vim.pack.add { gh 'folke/which-key.nvim' }
   require('which-key').setup {
