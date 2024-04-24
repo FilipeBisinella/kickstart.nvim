@@ -708,10 +708,27 @@ require('lazy').setup({
           lsp_fallback = not disable_filetypes[vim.bo[bufnr].filetype],
         }
       end,
+      formatters = {
+        ruff_imports = {
+          command = 'ruff',
+          args = {
+            'check',
+            '--force-exclude',
+            '--stdin-filename',
+            '$FILENAME',
+            '--select',
+            'I',
+            '--fix',
+            '-',
+          },
+          stdin = true,
+        },
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'ruff_format', 'ruff_imports' },
+        json = { 'jq' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
