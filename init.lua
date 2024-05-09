@@ -374,6 +374,13 @@ do
   vim.pack.add { gh 'NMAC427/guess-indent.nvim' }
   require('guess-indent').setup {}
 
+  vim.pack.add {
+    gh 'Makaze/AnsiEsc',
+    gh 'aaron-p1/match-visual.nvim',
+    gh 'farmergreg/vim-lastplace',
+  }
+  require('match-visual').setup {}
+
   -- Because lua is a real programming language, you can also have some logic to your installation -
   -- like only installing a plugin if a condition is met.
   --
