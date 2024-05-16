@@ -196,12 +196,12 @@ vim.keymap.set('n', 'J', 'mzJ`z', { desc = 'Join lines but keep cursor' })
 
 -- TODO see nnoremap * :let @/='\V' . substitute(escape(expand('<cword>'), '\'),'\n','\\n','g') . '\ze'<CR>
 -- for no jump serach (close to <C-d> in vscode
--- Note that the ":vmap" command can be used to specifically map keys in Visual
--- mode.  For example, if you would like the "/" command not to extend the Visual
--- area, but instead take the highlighted text and search for that:
--- :vmap / y/<C-R>"<CR>
--- vnoremap <C-r> "hy:%s/<C-r>h//gc<left><left><left>
+
+-- / in visual mode searches for current selection
+vim.keymap.set('v', '/', 'y/<C-R>"<CR>', { desc = 'Search current selection' })
+
 -- https://stackoverflow.com/questions/676600/vim-search-and-replace-selected-text
+vim.keymap.set('v', '<C-r>', '"hy:%s/<C-r>h//gc<left><left><left>', { desc = 'Substitute current selection' })
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
