@@ -262,6 +262,11 @@ require('lazy').setup({
 
   { 'aaron-p1/match-visual.nvim', opts = {} },
 
+  {
+    'farmergreg/vim-lastplace',
+    config = function() end,
+  },
+
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
   --    require('gitsigns').setup({ ... })
