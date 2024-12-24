@@ -198,7 +198,9 @@ vim.keymap.set('n', 'J', 'mzJ`z', { desc = 'Join lines but keep cursor' })
 -- for no jump serach (close to <C-d> in vscode
 
 -- / in visual mode searches for current selection
-vim.keymap.set('v', '/', 'y/<C-R>"<CR>', { desc = 'Search current selection' })
+-- vim.keymap.set('v', '/', 'y/<C-R>"<CR>', { desc = 'Search current selection' })
+
+vim.api.nvim_set_keymap('v', '/', "y/\\V<C-r>=escape(@\",'/\\')<CR><CR>N", { noremap = true, silent = true })
 
 -- https://stackoverflow.com/questions/676600/vim-search-and-replace-selected-text
 vim.keymap.set('v', '<C-r>', '"hy:%s/<C-r>h//gc<left><left><left>', { desc = 'Substitute current selection' })
@@ -460,7 +462,7 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sa', function()
         builtin.find_files {
           -- `hidden = true` will still show the inside of `.git/` as it's not `.gitignore`d.
-          find_command = { 'rg', '--files', '--hidden', '--glob', '!**/.git/*' },
+          find_command = { 'rg', '--files', '--hidden', '--no-ignore', '--glob', '!**/.git/*', '--glob', '!**/.venv/*' },
         }
       end, { desc = '[S]earch [A]ll files' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
@@ -469,11 +471,17 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>st', function()
         builtin.live_grep { additional_args = { '--no-ignore' } }
       end, { desc = '[S]earch all [T]ext by grep' })
-      vim.keymap.set('n', '<leader>sd', builtin.diagnostics, { desc = '[S]earch [D]iagnostics' })
+      vim.keymap.set('n', '<leader>sd', function()
+        builtin.diagnostics {
+          severity_limit = 'info',
+        }
+      end, { desc = '[S]earch [d]iagnostics' })
+      vim.keymap.set('n', '<leader>sD', builtin.diagnostics, { desc = '[S]earch All [D]iagnostics' })
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
       vim.keymap.set('n', '<leader>sc', builtin.git_status, { desc = '[S]earch git [c]hanges' })
+      vim.keymap.set('n', '<leader>m', builtin.marks, { desc = '[M]arks' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -530,6 +538,12 @@ require('lazy').setup({
       -- Allows extra capabilities provided by nvim-cmp
       'hrsh7th/cmp-nvim-lsp',
     },
+    -- diagnostics = { virtual_text = false, virtual_lines = {
+    --
+    --   only_current_line = true,
+    --
+    --   highlight_whole_line = false,
+    -- } },
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -637,6 +651,47 @@ require('lazy').setup({
                 vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
               end,
             })
+            -- Suppress specific diagnostic messages in Neovim
+            vim.lsp.handlers['textDocument/publishDiagnostics'] = function(_, result, ctx, config)
+              local diagnostics = result.diagnostics
+              for i = #diagnostics, 1, -1 do
+                if diagnostics[i].severity == vim.lsp.protocol.DiagnosticSeverity.Information then
+                  table.remove(diagnostics, i)
+                end
+              end
+              vim.lsp.diagnostic.on_publish_diagnostics(nil, result, ctx, config)
+
+              -- Add italic and gray style for INFORMATION diagnostics
+              for _, winid in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+                local bufnr = vim.api.nvim_win_get_buf(winid)
+                local qflist = vim.fn.getqflist { bufnr = bufnr }
+                if not qflist == nil then
+                  for _, item in ipairs(qflist.items) do
+                    if item.type == 'I' then
+                      vim.api.nvim_buf_add_highlight(bufnr, -1, 'LspDiagnosticsInformation', item.lnum - 1, 0, -1)
+                      vim.api.nvim_buf_add_highlight(bufnr, -1, 'LspDiagnosticsDefaultHint', item.lnum - 1, 0, -1)
+                    end
+                  end
+                end
+              end
+              --   local diagnostics = result.diagnostics
+              --   for _, diagnostic in ipairs(diagnostics) do
+              --     print '======'
+              --     print(dump(diagnostic))
+              --     if diagnostic.severity == vim.diagnostic.severity.INFORMATION then
+              --       diagnostic.severity = vim.diagnostic.severity.HINT
+              --     end
+              --   end
+              --   vim.lsp.diagnostic.on_publish_diagnostics(nil, result, ctx, config)
+
+              --       local diagnostics = result.diagnostics
+              --       for i = #diagnostics, 1, -1 do
+              --         if diagnostics[i].message:match 'is not accessed' then
+              --           table.remove(diagnostics, i)
+              --         end
+              --       end
+              --       vim.lsp.diagnostic.on_publish_diagnostics(nil, result, ctx, config)
+            end
           end
 
           -- The following code creates a keymap to toggle inlay hints in your
@@ -696,11 +751,15 @@ require('lazy').setup({
         ruff = {},
         -- https://github.com/rust-lang/rust-analyzer/blob/master/docs/user/generated_config.adoc
         rust_analyzer = {
-          settings = {
-            ['rust-analyzer'] = { --[[  completion = { autoimport = { enable = false } }, ]]
-              check = { command = 'clippy' },
-            },
-          },
+          -- TODO: fix
+          -- settings = {
+          --   ['rust-analyzer'] = { --[[  completion = { autoimport = { enable = false } }, ]]
+          --     check = { command = 'clippy' },
+          --   },
+          -- },
+          on_attach = function(client, bufnr)
+            vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+          end,
         },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -791,6 +850,10 @@ require('lazy').setup({
         else
           lsp_format_opt = 'fallback'
         end
+        local disable_on_save = { json = true }
+        if disable_on_save[vim.bo[bufnr].filetype] then
+          return nil
+        end
         return {
           timeout_ms = 500,
           lsp_format = lsp_format_opt,
@@ -811,12 +874,16 @@ require('lazy').setup({
           },
           stdin = true,
         },
+        jq_wide = {
+          command = 'jq',
+          args = { '--indent', '4' },
+        },
       },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        python = { 'ruff_format', 'ruff_imports' },
-        json = { 'jq' },
+        python = { 'ruff_imports', 'ruff_format' },
+        json = { 'jq_wide' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
@@ -1010,6 +1077,26 @@ require('lazy').setup({
         additional_vim_regex_highlighting = { 'ruby' },
       },
       indent = { enable = true, disable = { 'ruby' } },
+      incremental_selection = {
+        enable = true,
+        keymaps = {
+          init_selection = 'gnn',
+          node_incremental = '[x',
+          scope_incremental = 'grc',
+          node_decremental = ']x',
+        },
+      },
+      textobjects = {
+        select = {
+          enable = true,
+          lookahead = true, -- Automatically jump forward to textobj, similar to targets.vim
+          keymaps = {
+            -- Define your custom keybindings here
+            ['ia'] = '@parameter.inner',
+            ['aa'] = '@parameter.outer',
+          },
+        },
+      },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
