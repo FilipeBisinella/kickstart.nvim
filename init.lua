@@ -644,9 +644,39 @@ require('lazy').setup({
       ---@type table<string, vim.lsp.Config>
       local servers = {
         -- clangd = {},
-        -- gopls = {},
-        -- pyright = {},
-        -- rust_analyzer = {},
+        gopls = {},
+        -- pyright = {
+        --   settings = {
+        --     pyright = { -- Using Ruff's import organizer
+        --       disableOrganizeImports = true,
+        --     },
+        --     python = {
+        --       analysis = {
+        --         diagnosticMode = 'workspace',
+        --         -- Ignore all files for analysis to exclusively use Ruff for linting
+        --         -- ignore = { '*' },
+        --       },
+        --     },
+        --   },
+        -- },
+        ruff = {},
+        ty = {
+          settings = {
+            ty = {
+              diagnosticMode = 'workspace',
+            },
+          },
+        },
+        rust_analyzer = {
+          settings = {
+            ['rust-analyzer'] = {
+              check = {
+                command = 'clippy',
+              },
+            },
+          },
+        },
+        -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
         --    https://github.com/pmizio/typescript-tools.nvim
@@ -744,10 +774,31 @@ require('lazy').setup({
         lsp_format = 'fallback', -- Use external formatters if configured below, otherwise use LSP formatting. Set to `false` to disable LSP formatting entirely.
       },
       -- You can also specify external formatters in here.
+      formatters = {
+        ruff_imports = {
+          command = 'ruff',
+          args = {
+            'check',
+            '--force-exclude',
+            '--stdin-filename',
+            '$FILENAME',
+            '--select',
+            'I',
+            '--fix',
+            '-',
+          },
+          stdin = true,
+        },
+        jq_wide = {
+          command = 'jq',
+          args = { '--indent', '4' },
+        },
+      },
       formatters_by_ft = {
         -- rust = { 'rustfmt' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'ruff_imports', 'ruff_format' },
+        json = { 'jq_wide' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },
