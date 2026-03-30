@@ -630,6 +630,30 @@ require('lazy').setup({
                 vim.api.nvim_clear_autocmds { group = 'kickstart-lsp-highlight', buffer = event2.buf }
               end,
             })
+            -- Suppress specific diagnostic messages in Neovim
+            vim.lsp.handlers['textDocument/publishDiagnostics'] = function(_, result, ctx, config)
+              local diagnostics = result.diagnostics
+              for i = #diagnostics, 1, -1 do
+                if diagnostics[i].severity == vim.lsp.protocol.DiagnosticSeverity.Information then
+                  table.remove(diagnostics, i)
+                end
+              end
+              vim.lsp.diagnostic.on_publish_diagnostics(nil, result, ctx, config)
+
+              -- Add italic and gray style for INFORMATION diagnostics
+              for _, winid in pairs(vim.api.nvim_tabpage_list_wins(0)) do
+                local bufnr = vim.api.nvim_win_get_buf(winid)
+                local qflist = vim.fn.getqflist { bufnr = bufnr }
+                if not qflist == nil then
+                  for _, item in ipairs(qflist.items) do
+                    if item.type == 'I' then
+                      vim.api.nvim_buf_add_highlight(bufnr, -1, 'LspDiagnosticsInformation', item.lnum - 1, 0, -1)
+                      vim.api.nvim_buf_add_highlight(bufnr, -1, 'LspDiagnosticsDefaultHint', item.lnum - 1, 0, -1)
+                    end
+                  end
+                end
+              end
+            end
           end
 
           -- The following code creates a keymap to toggle inlay hints in your
@@ -641,6 +665,42 @@ require('lazy').setup({
           end
         end,
       })
+
+      -- Diagnostic Config
+      -- See :help vim.diagnostic.Opts
+      vim.diagnostic.config {
+        severity_sort = true,
+        float = {
+          border = 'rounded',
+          source = 'if_many',
+          format = function(diagnostic)
+            return string.format('%s (%s: %s)', diagnostic.message, diagnostic.source, diagnostic.code)
+          end,
+        },
+        underline = { severity = { min = vim.diagnostic.severity.ERROR } },
+        signs = {
+          text = {
+            [vim.diagnostic.severity.ERROR] = 'E',
+            [vim.diagnostic.severity.WARN] = 'W',
+            [vim.diagnostic.severity.INFO] = 'I',
+            [vim.diagnostic.severity.HINT] = 'H',
+          },
+        },
+        virtual_text = {
+          severity = { min = vim.diagnostic.severity.WARN },
+          source = 'if_many',
+          spacing = 2,
+          format = function(diagnostic)
+            local diagnostic_message = {
+              [vim.diagnostic.severity.ERROR] = diagnostic.message,
+              [vim.diagnostic.severity.WARN] = diagnostic.message,
+              [vim.diagnostic.severity.INFO] = diagnostic.message,
+              [vim.diagnostic.severity.HINT] = diagnostic.message,
+            }
+            return diagnostic_message[diagnostic.severity]
+          end,
+        },
+      }
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
