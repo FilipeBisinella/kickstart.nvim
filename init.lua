@@ -838,7 +838,6 @@ do
   vim.pack.add {
     gh 'neovim/nvim-lspconfig',
     gh 'mason-org/mason.nvim',
-    gh 'mason-org/mason-lspconfig.nvim',
     gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
   }
 
@@ -852,17 +851,30 @@ do
   --    :Mason
   --
   -- You can press `g?` for help in this menu.
+  -- You can add other tools here that you want Mason to install
+  -- for you, so that they are available from within Neovim.
   local ensure_installed = vim.tbl_keys(servers or {})
+  local mason_names = {
+    lua_ls = 'lua-language-server',
+    rust_analyzer = 'rust-analyzer',
+  }
+  ensure_installed = vim.tbl_map(function(name) return mason_names[name] or name end, ensure_installed)
   vim.list_extend(ensure_installed, {
     -- You can add other tools here that you want Mason to install
   })
 
   require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+  require('mason-tool-installer').clean()
 
-  for name, server in pairs(servers) do
-    vim.lsp.config(name, server)
-    vim.lsp.enable(name)
+  local ok_blink, blink = pcall(require, 'blink.cmp')
+  local capabilities = ok_blink and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
+
+  for server_name, server in pairs(servers) do
+    server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+    vim.lsp.config(server_name, server)
   end
+
+  vim.lsp.enable(vim.tbl_keys(servers))
 end
 
 -- ============================================================
