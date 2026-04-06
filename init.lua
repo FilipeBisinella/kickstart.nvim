@@ -546,8 +546,6 @@ require('lazy').setup({
         ---@diagnostic disable-next-line: missing-fields
         opts = {},
       },
-      -- Maps LSP server names between nvim-lspconfig and Mason package names.
-      'mason-org/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -740,7 +738,7 @@ require('lazy').setup({
             },
           },
         },
-        rust_analyzer = {
+        ['rust-analyzer'] = {
           settings = {
             ['rust-analyzer'] = {
               check = {
@@ -801,17 +799,42 @@ require('lazy').setup({
       --    :Mason
       --
       -- You can press `g?` for help in this menu.
+      --
+      -- You can add other tools here that you want Mason to install
+      -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
+      -- Map server names to mason package names
+      local mason_names = {
+        lua_ls = 'lua-language-server',
+      }
+      ensure_installed = vim.tbl_map(function(name)
+        return mason_names[name] or name
+      end, ensure_installed)
       vim.list_extend(ensure_installed, {
         -- You can add other tools here that you want Mason to install
       })
 
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      for name, server in pairs(servers) do
-        vim.lsp.config(name, server)
-        vim.lsp.enable(name)
+      -- remove mason installed packages that are not listed in ensure_installed
+      require('mason-tool-installer').clean()
+
+
+      -- LSP servers and clients are able to communicate to each other what features they support.
+      --  By default, Neovim doesn't support everything that is in the LSP specification.
+      --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
+      --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
+      local ok_blink, blink = pcall(require, 'blink.cmp')
+      local capabilities = ok_blink and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
+
+      -- Configure LSP servers using vim.lsp.config()
+      for server_name, server in pairs(servers) do
+        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+        vim.lsp.config(server_name, server)
       end
+
+      -- Enable all configured LSP servers
+      vim.lsp.enable(vim.tbl_keys(servers))
     end,
   },
 
