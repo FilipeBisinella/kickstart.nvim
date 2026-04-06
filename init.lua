@@ -838,33 +838,30 @@ do
   vim.pack.add {
     gh 'neovim/nvim-lspconfig',
     gh 'mason-org/mason.nvim',
-    gh 'WhoIsSethDaniel/mason-tool-installer.nvim',
   }
 
   -- Automatically install LSPs and related tools to stdpath for Neovim
   require('mason').setup {}
 
-  -- Ensure the servers and tools above are installed
+  -- Warn about configured tools that are not currently available.
   --
   -- To check the current status of installed tools and/or manually install
   -- other tools, you can run
   --    :Mason
   --
   -- You can press `g?` for help in this menu.
-  -- You can add other tools here that you want Mason to install
-  -- for you, so that they are available from within Neovim.
-  local ensure_installed = vim.tbl_keys(servers or {})
-  local mason_names = {
+  local executable_names = {
     lua_ls = 'lua-language-server',
     rust_analyzer = 'rust-analyzer',
   }
-  ensure_installed = vim.tbl_map(function(name) return mason_names[name] or name end, ensure_installed)
-  vim.list_extend(ensure_installed, {
-    -- You can add other tools here that you want Mason to install
-  })
-
-  require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-  require('mason-tool-installer').clean()
+  local missing_tools = {}
+  for name, _ in pairs(servers) do
+    local executable = executable_names[name] or name
+    if vim.fn.executable(executable) == 0 then table.insert(missing_tools, string.format('%s (`%s`)', name, executable)) end
+  end
+  if #missing_tools > 0 then
+    vim.schedule(function() vim.notify(('Missing LSP/tool executables: %s'):format(table.concat(missing_tools, ', ')), vim.log.levels.WARN) end)
+  end
 
   local ok_blink, blink = pcall(require, 'blink.cmp')
   local capabilities = ok_blink and blink.get_lsp_capabilities() or vim.lsp.protocol.make_client_capabilities()
