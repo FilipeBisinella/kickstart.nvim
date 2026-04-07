@@ -843,6 +843,17 @@ require('lazy').setup({
     config = function()
       require('onedark').setup { style = 'warmer' }
       vim.cmd.colorscheme 'onedark'
+
+      -- whenever an LSP attaches to a Python buffer, disable semantic tokens so onedark uses Treesitter colors.
+      vim.api.nvim_create_autocmd('LspAttach', {
+        group = vim.api.nvim_create_augroup('onedark-python-highlights', { clear = true }),
+        callback = function(event)
+          if vim.bo[event.buf].filetype == 'python' then
+            -- Let Python fall back to Treesitter colors because ty's semantic tokens flatten onedark highlights.
+            vim.lsp.semantic_tokens.enable(false, { bufnr = event.buf })
+          end
+        end,
+      })
     end,
   },
 
