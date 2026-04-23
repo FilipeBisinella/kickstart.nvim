@@ -287,6 +287,14 @@ do
   })
 end
 
+-- Force any file starting with "Dockerfile." to use dockerfile filetype.
+-- This overrides default detection where extensions like .ds can win first.
+vim.filetype.add {
+  pattern = {
+    ['Dockerfile%..*'] = 'dockerfile',
+  },
+}
+
 -- ============================================================
 -- SECTION 3: PLUGIN MANAGER INTRO
 -- vim.pack intro, build hooks
