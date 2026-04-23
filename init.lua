@@ -819,9 +819,19 @@ require('lazy').setup({
       local missing_tools = {}
       for name, _ in pairs(servers) do
         local executable = executable_names[name] or name
-        if vim.fn.executable(executable) == 0 then table.insert(missing_tools, string.format('%s (`%s`)', name, executable)) end
+        local is_installed = vim.fn.executable(executable) == 1
+        if not is_installed then
+          local mason_bin = vim.fn.stdpath 'data' .. '/mason/bin/' .. executable
+          is_installed = vim.fn.executable(mason_bin) == 1
+        end
+        if not is_installed then
+          table.insert(missing_tools, string.format('%s (`%s`)', name, executable))
+        end
       end
 
+      if #missing_tools > 0 then
+        vim.notify('Missing LSP tools: ' .. table.concat(missing_tools, ', '), vim.log.levels.WARN)
+      end
 
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
