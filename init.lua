@@ -271,6 +271,20 @@ rtp:prepend(lazypath)
 --    :Lazy update
 --
 -- NOTE: Here is where you install your plugins.
+
+-- Force any file starting with "Dockerfile." to use dockerfile filetype.
+-- This overrides the default detection which may match extensions like .ds to other filetypes.
+-- Neovim's filetype detection order checks file extensions AFTER patterns with non-negative
+-- priority, but built-in patterns using starsetf() have -math.huge priority (lowest). The
+-- built-in ['^Dockerfile%.'] pattern has such low priority that extension detection for
+-- .ds files runs first and assigns 'datascript' filetype instead. By adding this explicit
+-- pattern with default priority (0), it takes precedence over extension detection.
+vim.filetype.add({
+  pattern = {
+    ['Dockerfile%..*'] = 'dockerfile',
+  },
+})
+
 require('lazy').setup({
   -- NOTE: Plugins can be added via a link or github org/name. To run setup automatically, use `opts = {}`
   { 'NMAC427/guess-indent.nvim', opts = {} },
