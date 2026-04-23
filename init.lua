@@ -865,10 +865,15 @@ do
   local missing_tools = {}
   for name, _ in pairs(servers) do
     local executable = executable_names[name] or name
-    if vim.fn.executable(executable) == 0 then table.insert(missing_tools, string.format('%s (`%s`)', name, executable)) end
+    local is_installed = vim.fn.executable(executable) == 1
+    if not is_installed then
+      local mason_bin = vim.fn.stdpath 'data' .. '/mason/bin/' .. executable
+      is_installed = vim.fn.executable(mason_bin) == 1
+    end
+    if not is_installed then table.insert(missing_tools, string.format('%s (`%s`)', name, executable)) end
   end
   if #missing_tools > 0 then
-    vim.schedule(function() vim.notify(('Missing LSP/tool executables: %s'):format(table.concat(missing_tools, ', ')), vim.log.levels.WARN) end)
+    vim.schedule(function() vim.notify('Missing LSP tools: ' .. table.concat(missing_tools, ', '), vim.log.levels.WARN) end)
   end
 
   local ok_blink, blink = pcall(require, 'blink.cmp')
