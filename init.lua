@@ -550,18 +550,6 @@ require('lazy').setup({
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
-      -- Automatically install LSPs and related tools to stdpath for Neovim
-      -- Mason must be loaded before its dependents so we need to set it up here.
-      -- NOTE: `opts = {}` is the same as calling `require('mason').setup({})`
-      {
-        'mason-org/mason.nvim',
-        ---@module 'mason.settings'
-        ---@type MasonSettings
-        ---@diagnostic disable-next-line: missing-fields
-        opts = {},
-      },
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
-
       -- Useful status updates for LSP.
       { 'j-hui/fidget.nvim', opts = {} },
     },
@@ -586,7 +574,7 @@ require('lazy').setup({
       --  - and more!
       --
       -- Thus, Language Servers are external tools that must be installed separately from
-      -- Neovim. This is where `mason` and related plugins come into play.
+      -- Neovim.
       --
       -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
       -- and elegantly composed help section, `:help lsp-vs-treesitter`
@@ -806,13 +794,7 @@ require('lazy').setup({
         },
       }
 
-      -- Warn about configured tools that are not currently available.
-      --
-      -- To check the current status of installed tools and/or manually install
-      -- other tools, you can run
-      --    :Mason
-      --
-      -- You can press `g?` for help in this menu.
+      -- Warn about configured tools that are not currently available on the system PATH.
       local executable_names = {
         lua_ls = 'lua-language-server',
       }
@@ -820,10 +802,6 @@ require('lazy').setup({
       for name, _ in pairs(servers) do
         local executable = executable_names[name] or name
         local is_installed = vim.fn.executable(executable) == 1
-        if not is_installed then
-          local mason_bin = vim.fn.stdpath 'data' .. '/mason/bin/' .. executable
-          is_installed = vim.fn.executable(mason_bin) == 1
-        end
         if not is_installed then
           table.insert(missing_tools, string.format('%s (`%s`)', name, executable))
         end
