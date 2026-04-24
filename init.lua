@@ -655,7 +655,7 @@ end
 
 -- ============================================================
 -- SECTION 5: LSP
--- LSP keymaps, server configuration, Mason tools installations
+-- LSP keymaps and server configuration
 -- ============================================================
 do
   -- [[ LSP Configuration ]]
@@ -679,7 +679,7 @@ do
   --  - and more!
   --
   -- Thus, Language Servers are external tools that must be installed separately from
-  -- Neovim. This is where `mason` and related plugins come into play.
+  -- Neovim.
   --
   -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
   -- and elegantly composed help section, `:help lsp-vs-treesitter`
@@ -843,21 +843,9 @@ do
     },
   }
 
-  vim.pack.add {
-    gh 'neovim/nvim-lspconfig',
-    gh 'mason-org/mason.nvim',
-  }
+  vim.pack.add { gh 'neovim/nvim-lspconfig' }
 
-  -- Automatically install LSPs and related tools to stdpath for Neovim
-  require('mason').setup {}
-
-  -- Warn about configured tools that are not currently available.
-  --
-  -- To check the current status of installed tools and/or manually install
-  -- other tools, you can run
-  --    :Mason
-  --
-  -- You can press `g?` for help in this menu.
+  -- Warn about configured tools that are not currently available on the system PATH.
   local executable_names = {
     lua_ls = 'lua-language-server',
     rust_analyzer = 'rust-analyzer',
@@ -866,10 +854,6 @@ do
   for name, _ in pairs(servers) do
     local executable = executable_names[name] or name
     local is_installed = vim.fn.executable(executable) == 1
-    if not is_installed then
-      local mason_bin = vim.fn.stdpath 'data' .. '/mason/bin/' .. executable
-      is_installed = vim.fn.executable(mason_bin) == 1
-    end
     if not is_installed then table.insert(missing_tools, string.format('%s (`%s`)', name, executable)) end
   end
   if #missing_tools > 0 then
