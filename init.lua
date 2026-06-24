@@ -148,9 +148,9 @@ do
   vim.o.scrolloff = 10
 
   -- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
-  -- instead raise a dialog asking if you wish to save the current file(s)
+  -- do not raise a dialog; instead fail with an error (use `:q!` to force quit)
   -- See `:help 'confirm'`
-  vim.o.confirm = true
+  vim.o.confirm = false
 
   -- Do automatic indent when starting a new line
   vim.opt.smartindent = true
