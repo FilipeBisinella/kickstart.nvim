@@ -394,6 +394,8 @@ do
     gh 'farmergreg/vim-lastplace',
   }
   require('match-visual').setup {}
+  vim.cmd.packadd 'nvim.undotree'
+  vim.keymap.set('n', '<leader>u', require("undotree").open)
 
   -- Here is a more advanced configuration example that passes options to `gitsigns.nvim`
   --
