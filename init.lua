@@ -412,6 +412,31 @@ do
     },
   }
 
+  -- Neogit provides a repository-level Git interface, while gitsigns continues
+  -- to handle buffer-local hunks and signs.
+  vim.pack.add {
+    gh 'NeogitOrg/neogit',
+    gh 'sindrets/diffview.nvim',
+  }
+  require('diffview').setup {
+    use_icons = false,
+    signs = {
+      fold_closed = '>',
+      fold_open = 'v',
+      done = '+',
+    },
+  }
+  require('neogit').setup {
+    kind = 'tab',
+    notification_icon = '',
+    integrations = {
+      telescope = true,
+      diffview = true,
+    },
+    diff_viewer = 'diffview',
+  }
+  vim.keymap.set('n', '<leader>gg', '<cmd>Neogit<cr>', { desc = '[G]it status' })
+
   vim.pack.add { gh 'petertriho/nvim-scrollbar' }
   require('scrollbar').setup {
     handle = {
@@ -435,6 +460,7 @@ do
     spec = {
       { '<leader>s', group = '[S]earch', mode = { 'n', 'v' } },
       { '<leader>t', group = '[T]oggle' },
+      { '<leader>g', group = '[G]it' },
       { '<leader>h', group = 'Git [H]unk', mode = { 'n', 'v' } }, -- Enable gitsigns recommended keymaps first
       { 'gr', group = 'LSP Actions', mode = { 'n' } },
     },
